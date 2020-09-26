@@ -10,6 +10,6 @@ ModuleClosedNodes0=
 ModuleClosedNodes1=
 ModuleClosedNodes2=
 ModuleClosedNodes3=
-NavigationStack=ConfigActivity,Activity_Create,20,1,ConfigActivity,Globals,16,0,ConfigActivity,Activity_Pause,29,0,Main,Globals,41,6,ConfigActivity,btnReturn_Click,34,0,CamEx2,CloseSession,74,0,Main,btnClose_Click,238,0,Visual Designer,1.bal,-100,6,Visual Designer,Config.bal,-100,6,Main,btnConfig_Click,242,6
+NavigationStack=ConfigActivity,Globals,16,0,ConfigActivity,Activity_Pause,29,0,ConfigActivity,btnReturn_Click,34,0,CamEx2,CloseSession,74,0,Main,btnClose_Click,238,0,Visual Designer,Config.bal,-100,6,Main,btnConfig_Click,242,6,Main,Globals,44,6,Visual Designer,1.bal,-100,6,Main,Activity_Create,71,6,Main,Activity_Resume,86,0
 SelectedBuild=0
 VisibleModules=3,1,2

@@ -62,6 +62,9 @@ Sub Globals
 	Private pnlTarget As Panel
 	'sensor size
 	Private rectSensorSize As Rect
+	
+	Private btnConfig As Button
+	Private btnClose As Button
 
 End Sub
 
@@ -80,9 +83,17 @@ Sub Activity_Create(FirstTime As Boolean)
 	btnAutoExposure.Background = cd
 	btnFocus.Background = cd
 	btnScene.Background = cd
+	
 
 	buttons = Array(btnScene, btnAutoExposure, btnFocus)
 	SetState(False, False, VideoMode)
+	
+	Dim cdBlueBg As ColorDrawable
+	cdBlueBg.Initialize(Colors.ARGB(192,0,191,255),2dip)
+	btnConfig.Background = cdBlueBg
+	btnRecord.Background = cdBlueBg
+	btnClose.Background = cdBlueBg
+	
 	
 	cvs.Initialize(pnlTarget)
 	
