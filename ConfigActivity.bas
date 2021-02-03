@@ -40,3 +40,11 @@ End Sub
 Sub btnReturn_Click
 	StartActivity(Main)
 End Sub
+
+Sub chkFlash_Click
+	
+End Sub
+
+Sub chkFlash_CheckedChange(Checked As Boolean)
+	Main.isFlash = Checked
+End Sub
