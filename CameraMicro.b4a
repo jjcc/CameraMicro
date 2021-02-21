@@ -12,12 +12,13 @@ Library3=camera2
 Library4=runtimepermissions
 Library5=nfc
 Library6=xui views
+Library7=phone
 ManifestCode='This code will be applied to the manifest file during compilation.~\n~'You do not need to modify it in most cases.~\n~'See this link for for more information: https://www.b4x.com/forum/showthread.php?p=78136~\n~AddManifestText(~\n~<uses-sdk android:minSdkVersion="21" android:targetSdkVersion="26"/>~\n~<supports-screens android:largeScreens="true" ~\n~    android:normalScreens="true" ~\n~    android:smallScreens="true" ~\n~    android:anyDensity="true"/>)~\n~SetApplicationAttribute(android:icon, "@drawable/icon")~\n~SetApplicationAttribute(android:label, "$LABEL$")~\n~'End of default text.~\n~AddPermission(android.permission.RECORD_AUDIO)
 Module1=CamEx2
 Module2=ConfigActivity
 Module3=Starter
 NumberOfFiles=3
-NumberOfLibraries=6
+NumberOfLibraries=7
 NumberOfModules=3
 Version=10
 @EndOfDesignText@
@@ -43,7 +44,16 @@ Sub Process_Globals
 	Private MyTaskIndex As Int
 	Private rp As RuntimePermissions
 	Private cvs As B4XCanvas
+	Private cvs2 As B4XCanvas
 	Public isFlash As Boolean = False
+	Dim SensorsMap As Map
+	Type SensorData (Name As String, ThreeValues As Boolean)
+	Dim count As Int
+	Dim orientationX(3) As Float
+	Dim orientationY(3) As Float
+	Dim bc As BitmapCreator
+	Private xui As XUI
+	
 End Sub
 
 Sub Globals
@@ -61,15 +71,25 @@ Sub Globals
 	Private btnRecord As Button
 	Private barZoom As SeekBar
 	Private pnlTarget As Panel
+	Private pnlBubble As Panel
 	'sensor size
 	Private rectSensorSize As Rect
 	
 	Private btnConfig As Button
 	Private btnClose As Button
-
+	
 End Sub
 
 Sub Activity_Create(FirstTime As Boolean)
+	If FirstTime Then
+		SensorsMap.Initialize
+		Dim ps As PhoneSensors 'This object is only used to access the type constants.
+		AddSensor(ps.TYPE_ORIENTATION, "ORIENTATION", True)
+		count = 0
+	End If
+	
+
+	
 	VideoFileDir = rp.GetSafeDirDefaultExternal("")
 	VideoFileName = "1.mp4"
 	Activity.LoadLayout("1")
@@ -96,9 +116,18 @@ Sub Activity_Create(FirstTime As Boolean)
 	btnClose.Background = cdBlueBg
 	
 	
-	cvs.Initialize(pnlTarget)
+	bc.Initialize(pnlTarget.Width, pnlTarget.Height)
+	'InitBubblePanel
 	
-
+	cvs.Initialize(pnlTarget)
+	cvs2.Initialize(pnlBubble)
+	
+	'imvBubble..Initialize("")
+	'pnlBubble.Top = pnlTarget.Top
+	'pnlBubble.Left = pnlTarget.Left
+	'pnlBubble.Width = pnlTarget.Width
+	'pnlBubble.Height = pnlTarget.Height
+	
 	
 End Sub
 
@@ -109,7 +138,22 @@ Sub Activity_Resume
 	Dim y = pnlTarget.Height/2 As Float
 	Dim radius = 86dip As Float
 	cvs.DrawCircle(x,y,radius,Colors.ARGB(100,255,0,0),False,2dip)
+	DrawMark
 	cvs.Invalidate
+	
+	
+	For i = 0 To SensorsMap.Size - 1
+		Dim ps As PhoneSensors
+		Dim sd As SensorData
+		'Dim lbl As Label
+		ps = SensorsMap.GetKeyAt(i)
+		sd = SensorsMap.GetValueAt(i)
+		'lbl = SensorsLabels.Get(ps)
+		If ps.StartListening("Sensor") = False Then
+			'lbl.Text = sd.Name & " is not supported."
+			Log(sd.Name & " is not supported.")
+		End If
+	Next
 End Sub
 
 
@@ -156,6 +200,11 @@ End Sub
 
 Sub Activity_Pause (UserClosed As Boolean)
 	cam.Stop
+	For i = 0 To SensorsMap.Size - 1
+		Dim ps As PhoneSensors
+		ps = SensorsMap.GetKeyAt(i)
+		ps.StopListening
+	Next
 End Sub
 
 
@@ -280,5 +329,118 @@ End Sub
 
 Sub btnConfig_Click
 	StartActivity(ConfigActivity)
+End Sub
+
+Sub AddSensor(SensorType As Int, Name As String, ThreeValues As Boolean)
+	Dim sd As SensorData
+	sd.Initialize
+	sd.Name = Name
+	sd.ThreeValues = ThreeValues
+	Dim ps As PhoneSensors
+	ps.Initialize(SensorType)
+	SensorsMap.Put(ps, sd)
+	Log(Name & " MaxValue = " & ps.MaxValue)
+End Sub
+
+Sub Sensor_SensorChanged (Values() As Float)
+	Dim ps As PhoneSensors
+	Dim sd As SensorData
+	Dim srx, sry As Float
+	'Dim lbl As Label
+	'Get the PhoneSensors object that raised this event.
+	ps = Sender
+	sd = SensorsMap.Get(ps) 'Get the associated SensorData obejct
+	'lbl = SensorsLabels.Get(ps) 'Get the associated Label.
+	Dim x = pnlTarget.Width/2 As Float
+	Dim y = pnlTarget.Height/2 As Float
+	Dim radius = 86dip As Float
+	Dim markX,markY As Float
+	Dim weight As Float = 1.5
+	If sd.ThreeValues Then
+		Dim adjustedX As Float
+		If Values(0) > 180 Then  '0 to 360 convert to -180 to 180 
+ 			adjustedX = Values(0) - 360
+		Else
+			adjustedX = Values(0)
+		End If
+
+		srx = ShiftData(orientationX,adjustedX) 
+		sry = ShiftData(orientationY,Values(1)) '
+		If srx > 40 Then
+			markX = 40 * weight
+		Else if srx < -40 Then
+			markX = -40 * weight
+		Else
+			markX = srx * weight			
+		End If
+		
+		If sry > 40  Then
+			markY = 40 * weight
+		Else if sry < -40 Then 
+			markY = -40 * weight
+		Else
+			markY = sry * weight
+		End If
+		
+		Dim rect As B4XRect
+		rect.Initialize(pnlBubble.Left,pnlBubble.Top, pnlBubble.Top+pnlBubble.Width,pnlBubble.Top+pnlBubble.Height)
+		cvs2.ClearRect(rect)
+		cvs2.DrawCircle(x-markX,y+markY,5dip,Colors.ARGB(90,0,255,0),False,4dip)
+		'bc.DrawCircle(200dip,200dip,150dip,Colors.ARGB(60,255,0,0), True, 10dip)
+		'Dim brush As BCBrush = bc.CreateBrushFromColor(Colors.ARGB(60,255,0,0))
+		'bc.DrawRect(bc.TargetRect, xui.Color_Transparent, True, 0)
+		'bc.DrawCircle(x+markX,y+markY,6dip,Colors.ARGB(60,255,0,0),True,3dip)
+		'bc.AsyncDrawLine(10dip, 10dip, bc.mWidth - 10dip, bc.mHeight - 10dip,brush, 30dip)
+		'bc.SetBitmapToImageView(bc.Bitmap, imvBubble)
+		cvs2.Invalidate
+		
+	
+		If count Mod 5 == 0 Then
+			Log(sd.Name & " avr X=" & NumberFormat(srx, 0, 1) & ",avr Y=" & NumberFormat(sry, 0, 1) )
+		End If
+
+	Else
+		'lbl.Text = sd.Name & " = " & NumberFormat(Values(0), 0, 3)
+		If count Mod 5 == 0 Then
+			Log(sd.Name & " =" & NumberFormat(Values(0), 0, 3) )
+		End If
+	End If
+	count = count + 1
+End Sub
+
+Sub ShiftData( DataArray() As Float, NewData As Int) As Float
+	Dim sum = 0 As Float
+	For i = 0 To DataArray.Length - 2
+		sum  = sum + DataArray(i)
+		DataArray(i)   = DataArray(i+1)
+	Next
+	DataArray(DataArray.Length -1 ) = NewData
+	sum = sum + NewData
+	Dim len As Float = DataArray.Length * 1.0
+	Return sum/len
+End Sub
+
+
+Sub DrawMark()
+	Dim x = pnlTarget.Width/2 As Float
+	Dim y = pnlTarget.Height/2 As Float
+	Dim radius = 86dip As Float
+	'cvs.DrawCircle(x,y,radius,Colors.ARGB(100,255,0,0),False,2dip)
+	'cvs.Invalidate
+	Dim markLen = 15dip As Float
+	Dim markSx,markSy,markEx,markEy As Float
+	Dim degree() As Int = Array As Int(0,45,90,135,180,225,270,315 )
+	
+	For i = 0 To degree.Length - 1
+		
+		markSx = x + CosD(degree(i)) * radius
+		markSy = y + SinD(degree(i)) * radius
+		markEx = markSx  - CosD(degree(i)) *markLen
+		markEy = markSy - SinD(degree(i)) * markLen
+		cvs.DrawLine(markSx,markSy,markEx,markEy,Colors.Red,1dip)
+	Next
+	
+
+
 End Sub
 
