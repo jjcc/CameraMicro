@@ -355,16 +355,10 @@ Sub Sensor_SensorChanged (Values() As Float)
 	Dim y = pnlTarget.Height/2 As Float
 	Dim radius = 86dip As Float
 	Dim markX,markY As Float
-	Dim weight As Float = 1.5
+	Dim weight As Float = 3
 	If sd.ThreeValues Then
-		Dim adjustedX As Float
-		If Values(0) > 180 Then  '0 to 360 convert to -180 to 180 
- 			adjustedX = Values(0) - 360
-		Else
-			adjustedX = Values(0)
-		End If
 
-		srx = ShiftData(orientationX,adjustedX) 
+		srx = ShiftData(orientationX,Values(2))
 		sry = ShiftData(orientationY,Values(1)) '
 		If srx > 40 Then
 			markX = 40 * weight
@@ -385,7 +379,7 @@ Sub Sensor_SensorChanged (Values() As Float)
 		Dim rect As B4XRect
 		rect.Initialize(pnlBubble.Left,pnlBubble.Top, pnlBubble.Top+pnlBubble.Width,pnlBubble.Top+pnlBubble.Height)
 		cvs2.ClearRect(rect)
-		cvs2.DrawCircle(x-markX,y+markY,5dip,Colors.ARGB(90,0,255,0),False,4dip)
+		cvs2.DrawCircle(x+markX,y+markY,5dip,Colors.ARGB(90,0,255,0),False,4dip)
 		'bc.DrawCircle(200dip,200dip,150dip,Colors.ARGB(60,255,0,0), True, 10dip)
 		'Dim brush As BCBrush = bc.CreateBrushFromColor(Colors.ARGB(60,255,0,0))
 		'bc.DrawRect(bc.TargetRect, xui.Color_Transparent, True, 0)
