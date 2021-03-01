@@ -87,7 +87,7 @@ Sub Activity_Create(FirstTime As Boolean)
 		AddSensor(ps.TYPE_ORIENTATION, "ORIENTATION", True)
 		count = 0
 	End If
-	
+	 
 
 	
 	VideoFileDir = rp.GetSafeDirDefaultExternal("")
@@ -133,6 +133,9 @@ End Sub
 
 Sub Activity_Resume
 	OpenCamera(frontCamera)
+	'Hide zoom bar for now
+	barZoom.Enabled = False
+	barZoom.Visible = False
 	
 	Dim x = pnlTarget.Width/2 As Float
 	Dim y = pnlTarget.Height/2 As Float
@@ -296,7 +299,7 @@ Sub SetState(Open As Boolean, Busy As Boolean, Video As Boolean)
 	ProgressBar1.Visible = Busy
 	busystate = Busy
 	VideoMode = Video
-	barZoom.Visible = Open
+	'barZoom.Visible = Open
 	Dim btnRecordText As String
 	If VideoMode Then
 		If Busy Then
@@ -433,8 +436,8 @@ Sub DrawMark()
 		markEy = markSy - SinD(degree(i)) * markLen
 		cvs.DrawLine(markSx,markSy,markEx,markEy,Colors.Red,1dip)
 	Next
-	
-
+	cvs.DrawLine(x - 10dip,y,x + 10dip,y,Colors.Red,1dip)
+	cvs.DrawLine(x ,y-10dip,x,y + 10dip,Colors.Red,1dip)
 
 End Sub
 
